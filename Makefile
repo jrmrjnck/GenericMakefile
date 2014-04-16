@@ -70,52 +70,43 @@ DEPS = $(OBJECTS:.o=.d)
 # Debug build for gdb debugging
 .PHONY: debug
 debug: dirs
-	@echo "Beginning debug build v$(VERSION_STRING)"
 	@$(MAKE) all --no-print-directory
 
 # Standard, non-optimized release build
 .PHONY: release
 release: dirs
-	@echo "Beginning release build v$(VERSION_STRING)"
 	@$(MAKE) all --no-print-directory
 
 # Create the directories used in the build
 .PHONY: dirs
 dirs:
-	@echo "Creating directories"
 	@mkdir -p $(dir $(OBJECTS))
 	@mkdir -p $(BIN_PATH)
 
 # Installs to the set path
 .PHONY: install
 install:
-	@echo "Installing to $(DESTDIR)$(INSTALL_PREFIX)/bin"
 	@$(INSTALL_PROGRAM) $(BIN_PATH)/$(BIN_NAME) $(DESTDIR)$(INSTALL_PREFIX)/bin
 
 # Uninstalls the program
 .PHONY: uninstall
 uninstall:
-	@echo "Removing $(DESTDIR)$(INSTALL_PREFIX)/bin/$(BIN_NAME)"
 	@$(RM) $(DESTDIR)$(INSTALL_PREFIX)/bin/$(BIN_NAME)
 
 # Removes all build files
 .PHONY: clean
 clean:
-	@echo "Deleting $(BIN_NAME) symlink"
 	@$(RM) $(BIN_NAME)
-	@echo "Deleting directories"
 	@$(RM) -r build
 	@$(RM) -r bin
 
 # Main rule, checks the executable and symlinks to the output
 all: $(BIN_PATH)/$(BIN_NAME)
-	@echo "Making symlink: $(BIN_NAME) -> $<"
 	@$(RM) $(BIN_NAME)
 	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
 
 # Link the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
-	@echo "Linking: $@"
 	$(CMD_PREFIX)$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 
 # Add dependency files, if they exist
@@ -125,5 +116,4 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # After the first compilation they will be joined with the rules from the
 # dependency files to provide header dependencies
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
-	@echo "Compiling: $< -> $@"
 	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
