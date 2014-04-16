@@ -21,10 +21,6 @@ LINK_FLAGS =
 RLINK_FLAGS = 
 # Additional debug-specific linker settings
 DLINK_FLAGS = 
-# Destination directory, like a jail or mounted system
-DESTDIR = /
-# Install path (bin/ is appended automatically)
-INSTALL_PREFIX = usr/local
 #### END PROJECT SETTINGS ####
 
 # Generally should not need to edit below this line
@@ -34,10 +30,6 @@ INSTALL_PREFIX = usr/local
 SHELL = /bin/bash
 # Clear built-in rules
 .SUFFIXES:
-# Programs for installation
-INSTALL = install
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL) -m 644
 
 # Verbose option, to output compile and link commands
 export V = true
@@ -82,16 +74,6 @@ release: dirs
 dirs:
 	@mkdir -p $(dir $(OBJECTS))
 	@mkdir -p $(BIN_PATH)
-
-# Installs to the set path
-.PHONY: install
-install:
-	@$(INSTALL_PROGRAM) $(BIN_PATH)/$(BIN_NAME) $(DESTDIR)$(INSTALL_PREFIX)/bin
-
-# Uninstalls the program
-.PHONY: uninstall
-uninstall:
-	@$(RM) $(DESTDIR)$(INSTALL_PREFIX)/bin/$(BIN_NAME)
 
 # Removes all build files
 .PHONY: clean
