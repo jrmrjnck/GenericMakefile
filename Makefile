@@ -67,31 +67,17 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 # Set the dependency files that will be used to add header dependencies
 DEPS = $(OBJECTS:.o=.d)
 
-# Macros for timing compilation
-TIME_FILE = $(dir $@).$(notdir $@)_time
-START_TIME = date '+%s' > $(TIME_FILE)
-END_TIME = read st < $(TIME_FILE) ; \
-	$(RM) $(TIME_FILE) ; \
-	st=$$((`date '+%s'` - $$st - 86400)) ; \
-	echo `date -u -d @$$st '+%H:%M:%S'` 
-
 # Debug build for gdb debugging
 .PHONY: debug
 debug: dirs
 	@echo "Beginning debug build v$(VERSION_STRING)"
-	@$(START_TIME)
 	@$(MAKE) all --no-print-directory
-	@echo -n "Total build time: "
-	@$(END_TIME)
 
 # Standard, non-optimized release build
 .PHONY: release
 release: dirs
 	@echo "Beginning release build v$(VERSION_STRING)"
-	@$(START_TIME)
 	@$(MAKE) all --no-print-directory
-	@echo -n "Total build time: "
-	@$(END_TIME)
 
 # Create the directories used in the build
 .PHONY: dirs
@@ -130,10 +116,7 @@ all: $(BIN_PATH)/$(BIN_NAME)
 # Link the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 	@echo "Linking: $@"
-	@$(START_TIME)
 	$(CMD_PREFIX)$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
-	@echo -en "\t Link time: "
-	@$(END_TIME)
 
 # Add dependency files, if they exist
 -include $(DEPS)
@@ -143,8 +126,4 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # dependency files to provide header dependencies
 $(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
 	@echo "Compiling: $< -> $@"
-	@$(START_TIME)
 	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
-	@echo -en "\t Compile time: "
-	@$(END_TIME)
-
