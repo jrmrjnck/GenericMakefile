@@ -45,11 +45,11 @@ debug: export CXXFLAGS := $(CXXFLAGS) $(COMPILE_FLAGS) $(DCOMPILE_FLAGS)
 debug: export LDFLAGS := $(LDFLAGS) $(LINK_FLAGS) $(DLINK_FLAGS)
 
 # Build and output paths
-release: export BUILD_PATH := build/release
-release: export BIN_PATH := bin/release
-debug: export BUILD_PATH := build/debug
-debug: export BIN_PATH := bin/debug
-install: export BIN_PATH := bin/release
+release: export BUILD_TYPE := release
+debug:   export BUILD_TYPE := debug
+release debug: export BUILD_PATH := build/$(BUILD_TYPE)
+release debug: export BIN_PATH := bin/$(BUILD_TYPE)
+release debug: export TARGET := $(BIN_PATH)/$(BIN_NAME)
 
 # Find all source files in the source directory
 SOURCES = $(shell find $(SRC_PATH)/ -name '*.$(SRC_EXT)')
@@ -59,37 +59,24 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 # Set the dependency files that will be used to add header dependencies
 DEPS = $(OBJECTS:.o=.d)
 
-# Debug build for gdb debugging
-.PHONY: debug
-debug: dirs
-	@$(MAKE) all --no-print-directory
+.PHONY: debug release
+.SECONDEXPANSION:
+debug release: $$(TARGET)
 
-# Standard, non-optimized release build
-.PHONY: release
-release: dirs
-	@$(MAKE) all --no-print-directory
-
-# Create the directories used in the build
-.PHONY: dirs
-dirs:
-	@mkdir -p $(dir $(OBJECTS))
-	@mkdir -p $(BIN_PATH)
+all: debug release
 
 # Removes all build files
 .PHONY: clean
 clean:
-	@$(RM) $(BIN_NAME)
-	@$(RM) -r build
-	@$(RM) -r bin
-
-# Main rule, checks the executable and symlinks to the output
-all: $(BIN_PATH)/$(BIN_NAME)
-	@$(RM) $(BIN_NAME)
-	@ln -s $(BIN_PATH)/$(BIN_NAME) $(BIN_NAME)
+	$(RM) $(BIN_NAME)
+	$(RM) -r build
+	$(RM) -r bin
 
 # Link the executable
-$(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
+bin/%/$(BIN_NAME): $(OBJECTS)
+	@mkdir -p $(@D)
 	$(CMD_PREFIX)$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+	ln -sf $@ $(BIN_NAME)
 
 # Add dependency files, if they exist
 -include $(DEPS)
@@ -97,5 +84,6 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 # Source file rules
 # After the first compilation they will be joined with the rules from the
 # dependency files to provide header dependencies
-$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
-	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+/%.o: $(SRC_PATH)/%.$(SRC_EXT)
+	@mkdir -p $(BUILD_PATH)
+	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $(BUILD_PATH)$@
