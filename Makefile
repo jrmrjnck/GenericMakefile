@@ -60,10 +60,18 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 .PHONY: debug release
-.SECONDEXPANSION:
-debug release: $$(TARGET)
+debug release:
+	@$(MAKE) build --no-print-directory
 
 all: debug release
+
+build: dirs $(TARGET)
+
+.PHONY: dirs
+dirs: $(BUILD_PATH) $(BIN_PATH)
+
+$(BUILD_PATH) $(BIN_PATH):
+	@mkdir -p $@
 
 # Removes all build files
 .PHONY: clean
@@ -73,8 +81,7 @@ clean:
 	$(RM) -r bin
 
 # Link the executable
-bin/%/$(BIN_NAME): $(OBJECTS)
-	@mkdir -p $(@D)
+$(TARGET): $(OBJECTS)
 	$(CMD_PREFIX)$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 	ln -sf $@ $(BIN_NAME)
 
@@ -84,6 +91,5 @@ bin/%/$(BIN_NAME): $(OBJECTS)
 # Source file rules
 # After the first compilation they will be joined with the rules from the
 # dependency files to provide header dependencies
-/%.o: $(SRC_PATH)/%.$(SRC_EXT)
-	@mkdir -p $(BUILD_PATH)
-	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $(BUILD_PATH)$@
+$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT)
+	$(CMD_PREFIX)$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
